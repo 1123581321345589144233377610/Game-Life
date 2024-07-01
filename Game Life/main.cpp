@@ -166,5 +166,15 @@ int main() {
     Sleep(1000);
     if(flag1 == 1) std::cout << "All cells are died. Game over";
     if(flag2 == 1) std::cout << "The world has stagnated. Game over";//¬ыводим причину завершени€ игры
+    for (int i = 0; i < ROWS; ++i) {
+        delete[] MAP[i];
+    }
+    delete[] MAP;
+    for (int i = 0; i < ROWS; ++i) {
+        delete[] COPY_MAP[i];
+    }
+    delete[] COPY_MAP;
+    vec.clear();
+    copy.clear();//очистили пам€ть
     return 0;
 }
