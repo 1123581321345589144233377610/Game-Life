@@ -9,7 +9,7 @@ void print(char** MAP, int ROWS, int COLS) {
     for (int i = 0; i < ROWS; ++i) {
         std::cout << std::endl;
         for (int j = 0; j < COLS; ++j) {
-            std::cout << MAP[i][j];
+            std::cout << " " <<  MAP[i][j];
         }
     }
     std::cout << std::endl;
@@ -82,9 +82,14 @@ int count(int x, int y, int ROWS, int COLS, char** MAP) {
     return res;
 }//считаем сколько соседей(вроде работает норм)
 
+void output(int n, int size) {
+    std::cout << "Generation: " << n << "." << " ";
+    std::cout << "Alive cells: " << size << std::endl;
+}//вывод информации о состояниях в консоль
+
 int main() {
     bool isRunning = true;
-    int ROWS, COLS, size = (siz()) / 2, c = 0;
+    int ROWS, COLS, size = (siz()) / 2, c = 0, number_of_generation = 1, flag1 = 0, flag2 = 0;
     std::vector<std::pair<int, int>> vec;
     std::vector<std::pair<int, int>> copy;
     vec.resize(size);
@@ -92,37 +97,46 @@ int main() {
     fin >> ROWS;
     fin >> COLS;
     char** MAP = create_MAP(ROWS, COLS);//создали нашу карту
+    char** COPY_MAP = create_MAP(ROWS, COLS);
     for (int i = 0; i < size; ++i) {
         fin >> vec[i].first;
         fin >> vec[i].second;//всё ок получили массив звёздочек
-        //std::cout << vec[i].first;
-        //std::cout << " " << vec[i].second << std::endl;
-    }//это постоянная часть, а дальше идёт цикл
+    }
 
     change_MAP(vec, size, MAP, ROWS, COLS);
     print(MAP, ROWS, COLS);
+    output(number_of_generation, size);
+    Sleep(1000);//это постоянная часть, а дальше идёт цикл
 
     while (isRunning) {
+        system("cls");
         copy.resize(size);
         if (vec.size() < 1) {
             isRunning = false;
+            ++flag1;
+            continue;
         }
+        ++number_of_generation;
+        for (int i = 0; i < ROWS; ++i) {
+            for (int j = 0; j < COLS; ++j) {
+                COPY_MAP[i][j] = MAP[i][j];//копируем первоначальное состояние вселенной
+            }
+        }
+
         for (int i = 0; i < vec.size(); ++i) {
             copy[i] = vec[i];
         }
-        //change_MAP(vec, size, MAP, ROWS, COLS);
-        //print(MAP, ROWS, COLS);
 
         for (int i = 0; i < ROWS; ++i) {
             for (int j = 0; j < COLS; ++j) {
-                if (MAP[i][j] == '-' && count(i, j, ROWS, COLS, MAP) == 3) {
+                if (COPY_MAP[i][j] == '-' && count(i, j, ROWS, COLS, COPY_MAP) == 3) {
                     MAP[i][j] = '*';
                     std::pair<int, int> coor = std::make_pair(i, j);
                     vec.push_back(coor);//добавляем в вектор новую точку
                     ++size;
                     vec.resize(size);
                 }
-                else if ((MAP[i][j] == '*' && (count(i, j, ROWS, COLS, MAP) < 2)) || (MAP[i][j] == '*'  && count(i, j, ROWS, COLS, MAP) > 3)) {
+                else if ((COPY_MAP[i][j] == '*' && (count(i, j, ROWS, COLS, COPY_MAP) < 2)) || (COPY_MAP[i][j] == '*'  && count(i, j, ROWS, COLS, COPY_MAP) > 3)) {
                     MAP[i][j] = '-';
                     for (int k = 0; k < vec.size(); ++k) {
                         if (vec[k].first == i && vec[k].second == j) {
@@ -138,14 +152,19 @@ int main() {
             for (int i = 0; i < size; ++i) {
                 if (copy[i] == vec[i]) ++c;
             }
-            if (c == vec.size()) isRunning = false;
+            if (c == vec.size()) {
+                isRunning = false;
+                ++flag2;
+            }
             c = 0;
         }//выход при стабилизации
         change_MAP(vec, size, MAP, ROWS, COLS);
         print(MAP, ROWS, COLS);
-        Sleep(500);
+        output(number_of_generation, size);
+        Sleep(1000);
     }
-
-    //std::cout << count(5, 0, ROWS, COLS, MAP);
+    Sleep(1000);
+    if(flag1 == 1) std::cout << "All cells are died. Game over";
+    if(flag2 == 1) std::cout << "The world has stagnated. Game over";//Выводим причину завершения игры
     return 0;
 }
