@@ -2,8 +2,12 @@
 #include <string>
 #include <fstream>
 #include <vector>
-#include <utility>
 #include <Windows.h>
+
+struct point {
+    int x;
+    int y;
+};//заменил пару на структуру
 
 void print(char** MAP, int ROWS, int COLS) {
     for (int i = 0; i < ROWS; ++i) {
@@ -15,9 +19,9 @@ void print(char** MAP, int ROWS, int COLS) {
     std::cout << std::endl;
 }
 
-void change_MAP(std::vector<std::pair<int, int>> vec,int size, char** &MAP, int ROWS, int COLS) {
+void change_MAP(std::vector<point> vec,int size, char** &MAP, int ROWS, int COLS) {
     for (int i = 0; i < vec.size(); ++i) {
-        MAP[vec[i].first][vec[i].second] = '*';
+        MAP[vec[i].x][vec[i].y] = '*';
     }
 }
 
@@ -45,42 +49,23 @@ int siz() {
 }
 
 int count(int x, int y, int ROWS, int COLS, char** MAP) {
-    int res = 0;
-    if (y == 0 && x != 0 && x != ROWS - 1) {
-        if (MAP[x - 1][y] == '*') ++res; if (MAP[x - 1][y + 1] == '*') ++res; if (MAP[x][y + 1] == '*') ++res; if (MAP[x + 1][y + 1] == '*') ++res; if (MAP[x + 1][y] == '*') ++res;
-        return res;
-    }
-    else if (x == 0 && y != 0 && y != COLS - 1) {
-        if (MAP[x][y - 1] == '*') ++res; if (MAP[x][y + 1] == '*') ++res; if (MAP[x + 1][y - 1] == '*') ++res; if (MAP[x + 1][y] == '*') ++res; if (MAP[x + 1][y + 1] == '*') ++res;
-        return res;
-    }
-    else if (y == COLS - 1 && x != 0 && x != ROWS - 1) {
-        if (MAP[x - 1][y - 1] == '*') ++res; if (MAP[x - 1][y] == '*') ++res; if (MAP[x][y - 1] == '*') ++res; if (MAP[x + 1][y - 1] == '*') ++res; if (MAP[x + 1][y] == '*') ++res;
-        return res;
-    }
-    else if (x == ROWS - 1 && y != 0 && y != COLS - 1) {
-        if (MAP[x - 1][y - 1] == '*') ++res; if (MAP[x - 1][y] == '*') ++res; if (MAP[x - 1][y + 1] == '*') ++res; if (MAP[x][y - 1] == '*') ++res; if (MAP[x][y + 1] == '*') ++res;
-        return res;
-    }
-    else if (x == 0 && y == 0) {
-        if (MAP[1][0] == '*') ++res; if (MAP[1][1] == '*') ++res; if (MAP[0][1] == '*') ++res;
-        return res;
-    }
-    else if (x == ROWS - 1 && y == 0) {
-        if (MAP[ROWS - 2][0] == '*') ++res; if (MAP[ROWS - 2][1] == '*') ++res; if (MAP[ROWS - 1][1] == '*') ++res;
-        return res;
-    }
-    else if (x == ROWS - 1 && y == COLS - 1) {
-        if (MAP[ROWS - 1][COLS - 2] == '*') ++res; if (MAP[ROWS - 2][COLS - 2] == '*') ++res; if (MAP[ROWS - 2][COLS - 1] == '*') ++res;
-        return res;
-    }
-    else if (x == 0 && y == COLS - 1) {
-        if (MAP[0][COLS - 2] == '*') ++res; if (MAP[1][COLS - 2] == '*') ++res; if (MAP[1][COLS - 1] == '*') ++res;
-        return res;
-    }
-    if (MAP[x - 1][y - 1] == '*') ++res; if (MAP[x - 1][y] == '*') ++res; if (MAP[x - 1][y + 1] == '*') ++res; if (MAP[x][y - 1] == '*') ++res; if (MAP[x][y + 1] == '*') ++res; if (MAP[x + 1][y - 1] == '*') ++res; if (MAP[x + 1][y] == '*') ++res; if (MAP[x + 1][y + 1] == '*') ++res;
-    return res;
-}//считаем сколько соседей(вроде работает норм)
+    if (x < 0 || x >= ROWS || y < 0 || y >= COLS) return 0;
+    else if (MAP[x][y] == '*') return 1;
+    return 0;
+}
+
+int count_neighbours(int x, int y, int ROWS, int COLS, char** MAP) {
+    int neighbours = 0;
+    neighbours += count(x - 1, y - 1, ROWS, COLS, MAP);
+    neighbours += count(x - 1, y, ROWS, COLS, MAP);
+    neighbours += count(x - 1, y + 1, ROWS, COLS, MAP);
+    neighbours += count(x, y - 1, ROWS, COLS, MAP);
+    neighbours += count(x, y + 1, ROWS, COLS, MAP);
+    neighbours += count(x + 1, y - 1, ROWS, COLS, MAP);
+    neighbours += count(x + 1, y, ROWS, COLS, MAP);
+    neighbours += count(x + 1, y + 1, ROWS, COLS, MAP);
+    return neighbours;
+}//новый подсчёт соседей
 
 void output(int n, int size) {
     std::cout << "Generation: " << n << "." << " ";
@@ -90,8 +75,8 @@ void output(int n, int size) {
 int main() {
     bool isRunning = true;
     int ROWS, COLS, size = (siz()) / 2, c = 0, number_of_generation = 1, flag1 = 0, flag2 = 0;
-    std::vector<std::pair<int, int>> vec;
-    std::vector<std::pair<int, int>> copy;
+    std::vector<point> vec;
+    std::vector<point> copy;
     vec.resize(size);
     std::ifstream fin("input.txt");
     fin >> ROWS;
@@ -99,8 +84,8 @@ int main() {
     char** MAP = create_MAP(ROWS, COLS);//создали нашу карту
     char** COPY_MAP = create_MAP(ROWS, COLS);
     for (int i = 0; i < size; ++i) {
-        fin >> vec[i].first;
-        fin >> vec[i].second;//всё ок получили массив звёздочек
+        fin >> vec[i].x;
+        fin >> vec[i].y;//всё ок получили массив звёздочек
     }
 
     change_MAP(vec, size, MAP, ROWS, COLS);
@@ -129,17 +114,17 @@ int main() {
 
         for (int i = 0; i < ROWS; ++i) {
             for (int j = 0; j < COLS; ++j) {
-                if (COPY_MAP[i][j] == '-' && count(i, j, ROWS, COLS, COPY_MAP) == 3) {
+                if (COPY_MAP[i][j] == '-' && count_neighbours(i, j, ROWS, COLS, COPY_MAP) == 3) {
                     MAP[i][j] = '*';
-                    std::pair<int, int> coor = std::make_pair(i, j);
+                    point coor; coor.x = i; coor.y = j;
                     vec.push_back(coor);//добавляем в вектор новую точку
                     ++size;
                     vec.resize(size);
                 }
-                else if ((COPY_MAP[i][j] == '*' && (count(i, j, ROWS, COLS, COPY_MAP) < 2)) || (COPY_MAP[i][j] == '*'  && count(i, j, ROWS, COLS, COPY_MAP) > 3)) {
+                else if ((COPY_MAP[i][j] == '*' && (count_neighbours(i, j, ROWS, COLS, COPY_MAP) < 2)) || (COPY_MAP[i][j] == '*'  && count_neighbours(i, j, ROWS, COLS, COPY_MAP) > 3)) {
                     MAP[i][j] = '-';
                     for (int k = 0; k < vec.size(); ++k) {
-                        if (vec[k].first == i && vec[k].second == j) {
+                        if (vec[k].x == i && vec[k].y == j) {
                             vec.erase(vec.begin() + k);//убиарем точку из вектора
                             --size;
                             vec.resize(size);
@@ -150,7 +135,7 @@ int main() {
         }//меняем клетки и вектор
         if (copy.size() == vec.size()) {
             for (int i = 0; i < size; ++i) {
-                if (copy[i] == vec[i]) ++c;
+                if (copy[i].x == vec[i].x && copy[i].y == vec[i].y) ++c;
             }
             if (c == vec.size()) {
                 isRunning = false;
@@ -175,6 +160,6 @@ int main() {
     }
     delete[] COPY_MAP;
     vec.clear();
-    copy.clear();//очистили память
+    copy.clear();//очищаю память
     return 0;
 }
