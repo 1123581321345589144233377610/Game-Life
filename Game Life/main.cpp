@@ -161,5 +161,6 @@ int main() {
     delete[] COPY_MAP;
     vec.clear();
     copy.clear();//очищаю память
+    fin.close();
     return 0;
 }
